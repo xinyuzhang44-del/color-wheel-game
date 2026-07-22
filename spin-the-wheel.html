@@ -294,61 +294,72 @@
     text-align:center;
   }
 
-  .answer-btn{
-    appearance:none;
-    border: none;
-    cursor:pointer;
-    min-height: 58px;
-    padding: 10px 28px;
+  .guess-form{
+    display:flex;
+    gap: 10px;
+    width:100%;
+    max-width: 340px;
+  }
+
+  .guess-input{
+    flex: 1;
+    min-width: 0;
+    min-height: 56px;
+    padding: 10px 18px;
     border-radius: 999px;
     font-family: inherit;
     font-weight: 800;
-    font-size: clamp(1rem, 2.6vw, 1.2rem);
-    background: var(--paper);
+    font-size: clamp(1rem, 2.8vw, 1.25rem);
+    text-align: center;
     color: var(--ink);
+    background: var(--paper);
     border: 3px solid #d8d2f5;
-    box-shadow: 0 5px 0 #d8d2f5;
+    transition: border-color 0.15s ease, background 0.15s ease, transform 0.08s ease;
+  }
+  .guess-input::placeholder{ color:#b6aee0; font-weight:700; }
+  .guess-input:focus{ outline:none; border-color:#7c5cff; }
+  .guess-input.correct{ border-color: var(--green); background:#eafbea; color: var(--green); }
+  .guess-input.incorrect{ border-color:#ff6a3d; animation: shake 0.4s ease; }
+  .guess-input:disabled{ opacity:0.9; }
+
+  @keyframes shake{
+    0%,100%{ transform: translateX(0); }
+    20%{ transform: translateX(-8px); }
+    40%{ transform: translateX(8px); }
+    60%{ transform: translateX(-6px); }
+    80%{ transform: translateX(6px); }
+  }
+
+  .check-btn{
+    appearance:none;
+    border:none;
+    cursor:pointer;
+    min-height: 56px;
+    padding: 10px 22px;
+    border-radius: 999px;
+    font-family: inherit;
+    font-weight: 800;
+    font-size: clamp(0.95rem, 2.6vw, 1.1rem);
+    color:#fff;
+    background: linear-gradient(160deg, #7c5cff, #5b3df0);
+    box-shadow: 0 5px 0 #4327b8;
     transition: transform 0.08s ease, box-shadow 0.08s ease;
   }
-  .answer-btn:active{
-    transform: translateY(4px);
-    box-shadow: 0 1px 0 #d8d2f5;
+  .check-btn:active{
+    transform: translateY(3px);
+    box-shadow: 0 1px 0 #4327b8;
   }
+  .check-btn:disabled{ opacity:0.6; cursor:default; }
 
-  .answer-reveal{
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    gap: 6px;
-    min-height: 0;
-    max-height: 0;
-    overflow:hidden;
-    opacity:0;
-    transition: max-height 0.35s ease, opacity 0.35s ease;
-  }
-  .answer-reveal.shown{
-    max-height: 200px;
-    opacity:1;
-  }
-
-  .color-name{
+  .feedback-msg{
     margin:0;
-    font-weight: 900;
-    font-size: clamp(1.8rem, 6vw, 2.6rem);
-    text-transform: capitalize;
-    text-shadow: 0 2px 0 rgba(0,0,0,0.06);
-  }
-  .color-name.c-red{ color: var(--red); }
-  .color-name.c-green{ color: var(--green); }
-  .color-name.c-blue{ color: var(--blue); }
-  .color-name.c-yellow{ color: #d0a900; }
-
-  .great-job{
-    margin:0;
+    min-height: 1.4em;
     font-weight: 800;
-    font-size: clamp(1rem, 2.8vw, 1.3rem);
-    color: #ff6a3d;
+    font-size: clamp(1rem, 2.8vw, 1.25rem);
+    text-align:center;
   }
+  .feedback-msg.correct{ color: var(--green); }
+  .feedback-msg.wrong{ color: #ff6a3d; }
 
   footer{
     margin-top: auto;
@@ -358,32 +369,37 @@
     text-align:center;
   }
 
-  /* ---------- Confetti ---------- */
+  /* ---------- Fireworks ---------- */
 
-  .confetti-layer{
+  .firework-layer{
     position: fixed;
     inset: 0;
     pointer-events: none;
     overflow: hidden;
     z-index: 999;
   }
-  .confetti-piece{
+  .firework-particle{
     position:absolute;
-    top: -20px;
+    top: 0;
+    left: 0;
     width: 10px;
-    height: 14px;
-    opacity: 0.95;
-    animation-name: confetti-fall;
-    animation-timing-function: cubic-bezier(0.4,0.1,0.6,0.9);
+    height: 10px;
+    border-radius: 50%;
+    box-shadow: 0 0 6px 1px currentColor;
+    animation-name: firework-burst;
+    animation-timing-function: cubic-bezier(0.15,0.6,0.35,1);
     animation-fill-mode: forwards;
   }
-  @keyframes confetti-fall{
+  @keyframes firework-burst{
     0%{
-      transform: translate(0,0) rotate(0deg);
+      transform: translate(0,0) scale(1);
+      opacity: 1;
+    }
+    70%{
       opacity: 1;
     }
     100%{
-      transform: translate(var(--tx), var(--ty)) rotate(var(--rot));
+      transform: translate(var(--tx), var(--ty)) scale(0.3);
       opacity: 0;
     }
   }
@@ -405,8 +421,9 @@
     .flashcard{ background:#241f38; color:#f2eefb; }
     .flashcard .icon-frame{ background:#332c52; border-color:#241f38; }
     .say-it{ color:#c9c3ea; }
-    .answer-btn{ background:#241f38; color:#f2eefb; border-color:#443a6e; box-shadow:0 5px 0 #443a6e; }
-    .answer-btn:active{ box-shadow:0 1px 0 #443a6e; }
+    .guess-input{ background:#241f38; color:#f2eefb; border-color:#443a6e; }
+    .guess-input::placeholder{ color:#8079a8; }
+    .guess-input.correct{ background:#1c3324; }
     .back-link{ background:#241f38; color:#f2eefb; border-color:#443a6e; }
     footer{ color:#7a7399; }
   }
@@ -424,8 +441,9 @@
   :root[data-theme="dark"] .flashcard{ background:#241f38; color:#f2eefb; }
   :root[data-theme="dark"] .flashcard .icon-frame{ background:#332c52; border-color:#241f38; }
   :root[data-theme="dark"] .say-it{ color:#c9c3ea; }
-  :root[data-theme="dark"] .answer-btn{ background:#241f38; color:#f2eefb; border-color:#443a6e; box-shadow:0 5px 0 #443a6e; }
-  :root[data-theme="dark"] .answer-btn:active{ box-shadow:0 1px 0 #443a6e; }
+  :root[data-theme="dark"] .guess-input{ background:#241f38; color:#f2eefb; border-color:#443a6e; }
+  :root[data-theme="dark"] .guess-input::placeholder{ color:#8079a8; }
+  :root[data-theme="dark"] .guess-input.correct{ background:#1c3324; }
   :root[data-theme="dark"] .back-link{ background:#241f38; color:#f2eefb; border-color:#443a6e; }
   :root[data-theme="dark"] footer{ color:#7a7399; }
 
@@ -446,7 +464,7 @@
 
   <header>
     <h1>Color Wheel — Learn Your Colors!</h1>
-    <p class="instructions">Spin the wheel, look at the picture, and say the color out loud!</p>
+    <p class="instructions">Spin the wheel, look at the picture, say the color, then type it!</p>
   </header>
 
   <main>
@@ -464,12 +482,12 @@
 
     <section class="flashcard" id="flashcard" aria-live="polite">
       <div class="icon-frame" id="iconFrame"></div>
-      <p class="say-it">Say the color out loud!</p>
-      <button class="answer-btn" id="answerBtn">Show Answer</button>
-      <div class="answer-reveal" id="answerReveal">
-        <p class="color-name" id="colorName"></p>
-        <p class="great-job" id="greatJob"></p>
-      </div>
+      <p class="say-it">Say it out loud, then type the color!</p>
+      <form class="guess-form" id="guessForm" autocomplete="off">
+        <input type="text" class="guess-input" id="guessInput" placeholder="Type the color…" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Type the color name">
+        <button type="submit" class="check-btn" id="checkBtn">Check</button>
+      </form>
+      <p class="feedback-msg" id="feedbackMsg"></p>
     </section>
   </main>
 
@@ -631,10 +649,9 @@
   const stateLabel = document.getElementById('stateLabel');
   const flashcard = document.getElementById('flashcard');
   const iconFrame = document.getElementById('iconFrame');
-  const answerBtn = document.getElementById('answerBtn');
-  const answerReveal = document.getElementById('answerReveal');
-  const colorNameEl = document.getElementById('colorName');
-  const greatJobEl = document.getElementById('greatJob');
+  const guessForm = document.getElementById('guessForm');
+  const guessInput = document.getElementById('guessInput');
+  const feedbackMsg = document.getElementById('feedbackMsg');
   const streakCountEl = document.getElementById('streakCount');
 
   let currentRotation = 0;
@@ -668,10 +685,11 @@
 
   function resetForNextRound() {
     flashcard.classList.remove('visible');
-    answerReveal.classList.remove('shown');
-    answerBtn.textContent = 'Show Answer';
-    colorNameEl.textContent = '';
-    greatJobEl.textContent = '';
+    guessInput.value = '';
+    guessInput.disabled = false;
+    guessInput.classList.remove('correct', 'incorrect');
+    feedbackMsg.textContent = '';
+    feedbackMsg.className = 'feedback-msg';
   }
 
   function startSpin() {
@@ -714,7 +732,7 @@
     iconFrame.innerHTML = pick;
 
     flashcard.classList.add('visible');
-    stateLabel.textContent = 'Round result — say the color out loud!';
+    stateLabel.textContent = 'Round result — type the color you see!';
 
     streak += 1;
     streakCountEl.textContent = String(streak);
@@ -722,60 +740,79 @@
     spinBtn.disabled = false;
     spinBtn.classList.add('next-mode');
     spinBtn.textContent = 'NEXT SPIN →';
+
+    guessInput.focus();
   }
 
-  function toggleAnswer() {
-    const showing = answerReveal.classList.contains('shown');
-    if (showing) {
-      answerReveal.classList.remove('shown');
-      answerBtn.textContent = 'Show Answer';
-      return;
+  function checkGuess(e) {
+    e.preventDefault();
+    if (guessInput.disabled) return;
+
+    const val = guessInput.value.trim().toLowerCase();
+    if (!val) return;
+
+    if (val === currentWinner) {
+      guessInput.disabled = true;
+      guessInput.classList.remove('incorrect');
+      guessInput.classList.add('correct');
+      feedbackMsg.textContent = ENCOURAGEMENTS[Math.floor(Math.random() * ENCOURAGEMENTS.length)];
+      feedbackMsg.className = 'feedback-msg correct';
+      burstFireworks();
+    } else {
+      guessInput.classList.remove('incorrect');
+      // restart the shake animation even on repeated wrong guesses
+      void guessInput.offsetWidth;
+      guessInput.classList.add('incorrect');
+      feedbackMsg.textContent = 'Try again!';
+      feedbackMsg.className = 'feedback-msg wrong';
+      guessInput.select();
     }
-    colorNameEl.textContent = currentWinner;
-    colorNameEl.className = 'color-name c-' + currentWinner;
-    greatJobEl.textContent = ENCOURAGEMENTS[Math.floor(Math.random() * ENCOURAGEMENTS.length)];
-    answerReveal.classList.add('shown');
-    answerBtn.textContent = 'Hide Answer';
-    burstConfetti();
   }
 
-  function burstConfetti() {
+  function burstFireworks() {
     const layer = document.createElement('div');
-    layer.className = 'confetti-layer';
+    layer.className = 'firework-layer';
     document.body.appendChild(layer);
 
     const colors = ['#e53935', '#43a047', '#1e88e5', '#fdd835', '#ff6a3d', '#7c5cff'];
-    const originX = window.innerWidth / 2;
-    const pieceCount = 42;
+    const rect = iconFrame.getBoundingClientRect();
+    const shellCount = 3;
 
-    for (let i = 0; i < pieceCount; i++) {
-      const piece = document.createElement('div');
-      piece.className = 'confetti-piece';
-      const color = colors[Math.floor(Math.random() * colors.length)];
-      const isCircle = Math.random() > 0.5;
-      piece.style.background = color;
-      piece.style.borderRadius = isCircle ? '50%' : '2px';
-      piece.style.left = (originX + (Math.random() * 260 - 130)) + 'px';
+    for (let s = 0; s < shellCount; s++) {
+      const originX = rect.left + rect.width / 2 + (Math.random() * 160 - 80);
+      const originY = rect.top + rect.height * (0.3 + Math.random() * 0.3);
+      const delay = s * 180;
+      const particleCount = 22;
 
-      const tx = (Math.random() * 300 - 150) + 'px';
-      const ty = (window.innerHeight * (0.5 + Math.random() * 0.5)) + 'px';
-      const rot = (Math.random() * 720 - 360) + 'deg';
-      piece.style.setProperty('--tx', tx);
-      piece.style.setProperty('--ty', ty);
-      piece.style.setProperty('--rot', rot);
+      for (let i = 0; i < particleCount; i++) {
+        const piece = document.createElement('div');
+        piece.className = 'firework-particle';
+        const color = colors[Math.floor(Math.random() * colors.length)];
+        piece.style.color = color;
+        piece.style.background = color;
+        piece.style.left = originX + 'px';
+        piece.style.top = originY + 'px';
 
-      const dur = 1.1 + Math.random() * 0.9;
-      piece.style.animationDuration = dur.toFixed(2) + 's';
-      piece.style.animationDelay = (Math.random() * 0.15) + 's';
+        const angle = (Math.PI * 2 * i) / particleCount + Math.random() * 0.3;
+        const dist = 70 + Math.random() * 60;
+        const tx = Math.cos(angle) * dist + 'px';
+        const ty = Math.sin(angle) * dist + 'px';
+        piece.style.setProperty('--tx', tx);
+        piece.style.setProperty('--ty', ty);
 
-      layer.appendChild(piece);
+        const dur = 0.8 + Math.random() * 0.4;
+        piece.style.animationDuration = dur.toFixed(2) + 's';
+        piece.style.animationDelay = delay + 'ms';
+
+        layer.appendChild(piece);
+      }
     }
 
-    setTimeout(() => layer.remove(), 2400);
+    setTimeout(() => layer.remove(), shellCount * 180 + 1400);
   }
 
   spinBtn.addEventListener('click', startSpin);
-  answerBtn.addEventListener('click', toggleAnswer);
+  guessForm.addEventListener('submit', checkGuess);
 </script>
 </body>
 </html>
