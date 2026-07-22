@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Paint the Fruit — Color Match!</title>
+<style>
+  :root{
+    --red:#e53935;
+    --green:#43a047;
+    --blue:#1e88e5;
+    --yellow:#fdd835;
+    --ink:#2b2540;
+    --paper:#fffdf7;
+    --cloud:#f2eefb;
+    --shadow: 0 10px 24px rgba(43,37,64,0.18);
+  }
+
+  *{ box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  html,body{
+    margin:0;
+    padding:0;
+    min-height:100%;
+    background: radial-gradient(circle at 20% 10%, #fff7e0 0%, #eaf3ff 45%, #f4ecff 100%);
+    font-family: "Nunito", "Segoe UI Rounded", "Segoe UI", "Trebuchet MS", Verdana, sans-serif;
+    color: var(--ink);
+    overflow-x: hidden;
+  }
+
+  .page{
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding: clamp(14px, 3vw, 32px);
+    gap: clamp(10px, 2vw, 18px);
+  }
+
+  .topbar{
+    width:100%;
+    max-width: 760px;
+    display:flex;
+    justify-content: space-between;
+    align-items:center;
+  }
+
+  .back-link{
+    text-decoration:none;
+    font-weight:800;
+    font-size: clamp(0.85rem, 2vw, 1rem);
+    color:#6b6690;
+    background: var(--paper);
+    border: 2px solid #d8d2f5;
+    border-radius: 999px;
+    padding: 8px 16px;
+    box-shadow: var(--shadow);
+    transition: transform 0.08s ease;
+  }
+  .back-link:active{ transform: translateY(2px); }
+
+  .streak{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    background: var(--paper);
+    border: 3px solid #ffdd6b;
+    border-radius: 999px;
+    padding: 8px 18px;
+    font-weight: 800;
+    font-size: clamp(0.95rem, 2.4vw, 1.2rem);
+    box-shadow: var(--shadow);
+  }
+  .streak .star-icon{
+    font-size: 1.3em;
+    filter: drop-shadow(0 2px 2px rgba(0,0,0,0.15));
+  }
+
+  header{
+    text-align:center;
+    max-width: 760px;
+  }
+
+  h1{
+    margin: 0 0 6px 0;
+    font-size: clamp(1.5rem, 4.2vw, 2.4rem);
+    font-weight: 900;
+    letter-spacing: -0.02em;
+    background: linear-gradient(90deg, var(--red), var(--yellow) 35%, var(--green) 65%, var(--blue));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .instructions{
+    margin:0;
+    font-size: clamp(0.9rem, 2.1vw, 1.1rem);
+    color: #55507a;
+    font-weight: 600;
+  }
+
+  main{
+    width:100%;
+    max-width: 760px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap: clamp(18px, 3.5vw, 30px);
+  }
+
+  /* ---------- Fruit grid ---------- */
+
+  .fruit-grid{
+    width:100%;
+    display:grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: clamp(8px, 2.4vw, 20px);
+  }
+
+  .fruit-slot{
+    position:relative;
+    aspect-ratio: 1;
+    background: var(--paper);
+    border-radius: 22px;
+    box-shadow: var(--shadow);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding: 10%;
+    transition: transform 0.12s ease;
+  }
+  .fruit-slot.drag-over{ transform: scale(1.06); box-shadow: 0 0 0 5px #7c5cff, var(--shadow); }
+  .fruit-slot.shake{ animation: shake 0.4s ease; }
+  .fruit-slot.done{ box-shadow: 0 0 0 5px #43a047, var(--shadow); }
+
+  @keyframes shake{
+    0%,100%{ transform: translateX(0); }
+    20%{ transform: translateX(-8px); }
+    40%{ transform: translateX(8px); }
+    60%{ transform: translateX(-6px); }
+    80%{ transform: translateX(6px); }
+  }
+
+  .fruit-slot svg{ width:100%; height:100%; }
+
+  .badge{
+    position:absolute;
+    top:-10px;
+    right:-10px;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: var(--green);
+    color:#fff;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-weight: 900;
+    font-size: 1rem;
+    box-shadow: var(--shadow);
+    opacity:0;
+    transform: scale(0);
+    transition: opacity 0.2s ease, transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  .fruit-slot.done .badge{ opacity:1; transform: scale(1); }
+
+  .try-again{
+    position:absolute;
+    bottom: -8px;
+    left:50%;
+    transform: translateX(-50%) translateY(0);
+    background: #ff6a3d;
+    color:#fff;
+    font-weight: 800;
+    font-size: clamp(0.7rem, 1.8vw, 0.85rem);
+    padding: 4px 12px;
+    border-radius: 999px;
+    white-space: nowrap;
+    opacity:0;
+    pointer-events:none;
+    transition: opacity 0.25s ease, transform 0.25s ease;
+    z-index: 4;
+  }
+  .try-again.show{ opacity:1; transform: translateX(-50%) translateY(8px); }
+
+  /* ---------- Palette ---------- */
+
+  .palette-label{
+    margin:0;
+    font-weight: 800;
+    font-size: clamp(0.9rem, 2.2vw, 1.05rem);
+    color: #6b6690;
+    text-align:center;
+  }
+
+  .palette{
+    display:flex;
+    justify-content:center;
+    gap: clamp(10px, 3vw, 26px);
+  }
+
+  .brush{
+    width: clamp(56px, 14vw, 84px);
+    height: clamp(56px, 14vw, 84px);
+    cursor: grab;
+    touch-action: none;
+    transition: transform 0.15s ease, opacity 0.15s ease;
+    filter: drop-shadow(0 6px 8px rgba(0,0,0,0.18));
+  }
+  .brush:hover{ transform: translateY(-4px) rotate(-4deg); }
+  .brush.dragging{ opacity: 0.35; }
+
+  .ghost-brush{
+    position: fixed;
+    width: clamp(64px, 16vw, 96px);
+    height: clamp(64px, 16vw, 96px);
+    pointer-events: none;
+    z-index: 1000;
+    transform: translate(-50%, -50%) rotate(-18deg);
+    filter: drop-shadow(0 8px 10px rgba(0,0,0,0.25));
+  }
+
+  .win-banner{
+    width:100%;
+    max-width: 600px;
+    background: var(--paper);
+    border-radius: 24px;
+    box-shadow: var(--shadow);
+    padding: 18px 22px;
+    text-align:center;
+    font-weight: 900;
+    font-size: clamp(1.1rem, 3vw, 1.5rem);
+    color: var(--green);
+    opacity:0;
+    max-height:0;
+    overflow:hidden;
+    transition: opacity 0.3s ease, max-height 0.3s ease, padding 0.3s ease;
+  }
+  .win-banner.show{ opacity:1; max-height: 160px; }
+
+  .reset-btn{
+    appearance:none;
+    border:none;
+    cursor:pointer;
+    min-height: 54px;
+    padding: 10px 26px;
+    border-radius: 999px;
+    font-family: inherit;
+    font-weight: 800;
+    font-size: clamp(0.95rem, 2.4vw, 1.1rem);
+    color:#fff;
+    background: linear-gradient(160deg, #7c5cff, #5b3df0);
+    box-shadow: 0 6px 0 #4327b8, var(--shadow);
+    transition: transform 0.08s ease, box-shadow 0.08s ease;
+  }
+  .reset-btn:active{
+    transform: translateY(4px);
+    box-shadow: 0 2px 0 #4327b8, var(--shadow);
+  }
+
+  footer{
+    margin-top: auto;
+    padding-top: 10px;
+    font-size: 0.8rem;
+    color: #9a94bd;
+    text-align:center;
+  }
+
+  .confetti-layer{
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+    z-index: 999;
+  }
+  .confetti-piece{
+    position:absolute;
+    top: -20px;
+    width: 10px;
+    height: 14px;
+    opacity: 0.95;
+    animation-name: confetti-fall;
+    animation-timing-function: cubic-bezier(0.4,0.1,0.6,0.9);
+    animation-fill-mode: forwards;
+  }
+  @keyframes confetti-fall{
+    0%{ transform: translate(0,0) rotate(0deg); opacity: 1; }
+    100%{ transform: translate(var(--tx), var(--ty)) rotate(var(--rot)); opacity: 0; }
+  }
+
+  @media (max-width: 480px){
+    .fruit-grid{ gap: 8px; }
+  }
+
+  @media (prefers-color-scheme: dark){
+    html,body{
+      background: radial-gradient(circle at 20% 10%, #241f38 0%, #1b1730 55%, #171326 100%);
+      color: #f2eefb;
+    }
+    .instructions{ color: #c9c3ea; }
+    .streak{ background:#241f38; color:#f2eefb; border-color:#7a5cff; }
+    .back-link{ background:#241f38; color:#f2eefb; border-color:#443a6e; }
+    .palette-label{ color:#b6aee0; }
+    .fruit-slot{ background:#241f38; }
+    .win-banner{ background:#241f38; }
+    footer{ color:#7a7399; }
+  }
+
+  :root[data-theme="dark"] html,
+  :root[data-theme="dark"] body{
+    background: radial-gradient(circle at 20% 10%, #241f38 0%, #1b1730 55%, #171326 100%);
+    color: #f2eefb;
+  }
+  :root[data-theme="dark"] .instructions{ color: #c9c3ea; }
+  :root[data-theme="dark"] .streak{ background:#241f38; color:#f2eefb; border-color:#7a5cff; }
+  :root[data-theme="dark"] .back-link{ background:#241f38; color:#f2eefb; border-color:#443a6e; }
+  :root[data-theme="dark"] .palette-label{ color:#b6aee0; }
+  :root[data-theme="dark"] .fruit-slot{ background:#241f38; }
+  :root[data-theme="dark"] .win-banner{ background:#241f38; }
+  :root[data-theme="dark"] footer{ color:#7a7399; }
+
+  :root[data-theme="light"] html,
+  :root[data-theme="light"] body{
+    background: radial-gradient(circle at 20% 10%, #fff7e0 0%, #eaf3ff 45%, #f4ecff 100%);
+    color: var(--ink);
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="topbar">
+    <a class="back-link" href="index.html">&larr; Games</a>
+    <div class="streak"><span class="star-icon">⭐</span><span id="doneCount">0</span><span>&nbsp;/ 4</span></div>
+  </div>
+
+  <header>
+    <h1>Paint the Fruit — Color Match!</h1>
+    <p class="instructions">Drag the paintbrush to the fruit that matches its color!</p>
+  </header>
+
+  <main>
+    <div class="fruit-grid" id="fruitGrid"></div>
+
+    <div class="win-banner" id="winBanner">🎉 You painted every fruit! Great matching! 🎉</div>
+
+    <p class="palette-label">Pick a paintbrush and drag it onto a fruit</p>
+    <div class="palette" id="palette"></div>
+
+    <button class="reset-btn" id="resetBtn">Reset Fruit</button>
+  </main>
+
+  <footer>Made for little learners &middot; practice makes perfect &middot; no wrong answers here!</footer>
+</div>
+
+<script>
+  const GRAY = '#d9d5e8';
+  const OUTLINE = '#403a5c';
+
+  const FRUITS = [
+    {
+      id: 'apple',
+      color: 'red',
+      hex: '#e53935',
+      svg: (fill) => `<svg viewBox="0 0 150 150" xmlns="http://www.w3.org/2000/svg">
+        <path d="M75,48 C55,20 15,32 15,76 C15,113 46,136 75,133 C104,136 135,113 135,76 C135,32 95,20 75,48 Z" fill="${fill}" stroke="${OUTLINE}" stroke-width="4"/>
+        <path d="M75,48 C68,38 62,32 55,30" fill="none" stroke="${OUTLINE}" stroke-width="5" stroke-linecap="round"/>
+        <path d="M75,44 C78,26 84,16 92,10" fill="none" stroke="${OUTLINE}" stroke-width="6" stroke-linecap="round"/>
+        <ellipse cx="97" cy="22" rx="16" ry="9" fill="${GRAY}" stroke="${OUTLINE}" stroke-width="3" transform="rotate(-25 97 22)"/>
+      </svg>`
+    },
+    {
+      id: 'banana',
+      color: 'yellow',
+      hex: '#fdd835',
+      svg: (fill) => `<svg viewBox="0 0 150 150" xmlns="http://www.w3.org/2000/svg">
+        <path d="M42,118 C24,90 28,52 58,28 C74,15 92,14 100,22 C88,24 74,32 63,46 C48,66 46,90 56,112 C60,120 68,126 78,127 C68,133 50,132 42,118 Z" fill="${fill}" stroke="${OUTLINE}" stroke-width="4" stroke-linejoin="round"/>
+        <ellipse cx="96" cy="22" rx="8" ry="6" fill="${OUTLINE}" transform="rotate(30 96 22)"/>
+        <ellipse cx="45" cy="120" rx="9" ry="7" fill="${OUTLINE}" transform="rotate(-30 45 120)"/>
+      </svg>`
+    },
+    {
+      id: 'kiwi',
+      color: 'green',
+      hex: '#43a047',
+      svg: (fill) => `<svg viewBox="0 0 150 150" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="75" cy="75" r="60" fill="${GRAY}" stroke="${OUTLINE}" stroke-width="4"/>
+        <circle cx="75" cy="75" r="46" fill="${fill}" stroke="${OUTLINE}" stroke-width="3"/>
+        <circle cx="75" cy="75" r="13" fill="#ffffff" stroke="${OUTLINE}" stroke-width="2"/>
+        <g fill="${OUTLINE}">
+          <circle cx="75" cy="46" r="3.2"/>
+          <circle cx="97" cy="55" r="3.2"/>
+          <circle cx="106" cy="75" r="3.2"/>
+          <circle cx="97" cy="95" r="3.2"/>
+          <circle cx="75" cy="104" r="3.2"/>
+          <circle cx="53" cy="95" r="3.2"/>
+          <circle cx="44" cy="75" r="3.2"/>
+          <circle cx="53" cy="55" r="3.2"/>
+        </g>
+        <g stroke="${OUTLINE}" stroke-width="2" opacity="0.6">
+          <path d="M75,15 L75,25 M113,29 L106,37 M135,67 L125,70 M135,83 L125,80 M113,121 L106,113 M75,135 L75,125 M37,121 L44,113 M15,83 L25,80 M15,67 L25,70 M37,29 L44,37"/>
+        </g>
+      </svg>`
+    },
+    {
+      id: 'blueberry',
+      color: 'blue',
+      hex: '#1e88e5',
+      svg: (fill) => `<svg viewBox="0 0 150 150" xmlns="http://www.w3.org/2000/svg">
+        <path d="M75,42 L68,26 M75,42 L82,26" fill="none" stroke="${OUTLINE}" stroke-width="4" stroke-linecap="round"/>
+        <ellipse cx="72" cy="30" rx="10" ry="6" fill="${GRAY}" stroke="${OUTLINE}" stroke-width="2.5" transform="rotate(-10 72 30)"/>
+        <circle cx="75" cy="80" r="50" fill="${fill}" stroke="${OUTLINE}" stroke-width="4"/>
+        <g stroke="${OUTLINE}" stroke-width="2.5" stroke-linecap="round">
+          <path d="M71,56 L79,56 M75,52 L75,60"/>
+        </g>
+      </svg>`
+    }
+  ];
+
+  const grid = document.getElementById('fruitGrid');
+  const palette = document.getElementById('palette');
+  const doneCountEl = document.getElementById('doneCount');
+  const winBanner = document.getElementById('winBanner');
+  const resetBtn = document.getElementById('resetBtn');
+
+  const state = {}; // fruitId -> done(bool)
+
+  function buildFruitSlot(fruit) {
+    const slot = document.createElement('div');
+    slot.className = 'fruit-slot';
+    slot.id = 'slot-' + fruit.id;
+    slot.dataset.color = fruit.color;
+    slot.innerHTML = fruit.svg(GRAY) + `<div class="badge">&#10003;</div><div class="try-again">Try again!</div>`;
+    return slot;
+  }
+
+  function paintbrushSVG(hex) {
+    return `<svg viewBox="0 0 150 150" xmlns="http://www.w3.org/2000/svg">
+      <g transform="rotate(45 75 75)">
+        <rect x="68" y="10" width="14" height="55" rx="6" fill="#c99a5b" stroke="${OUTLINE}" stroke-width="2.5"/>
+        <rect x="64" y="60" width="22" height="16" rx="3" fill="#b0b0b0" stroke="${OUTLINE}" stroke-width="2.5"/>
+        <path d="M66,76 C64,95 66,112 75,128 C84,112 86,95 84,76 Z" fill="${hex}" stroke="${OUTLINE}" stroke-width="2.5" stroke-linejoin="round"/>
+      </g>
+    </svg>`;
+  }
+
+  function buildBrush(color, hex) {
+    const brush = document.createElement('div');
+    brush.className = 'brush';
+    brush.dataset.color = color;
+    brush.innerHTML = paintbrushSVG(hex);
+    return brush;
+  }
+
+  FRUITS.forEach(f => grid.appendChild(buildFruitSlot(f)));
+  FRUITS.forEach(f => palette.appendChild(buildBrush(f.color, f.hex)));
+
+  function resetGame() {
+    FRUITS.forEach(f => {
+      state[f.id] = false;
+      const slot = document.getElementById('slot-' + f.id);
+      slot.classList.remove('done');
+      slot.querySelector('svg').outerHTML = f.svg(GRAY);
+    });
+    doneCountEl.textContent = '0';
+    winBanner.classList.remove('show');
+  }
+  resetGame();
+
+  function updateProgress() {
+    const doneCount = Object.values(state).filter(Boolean).length;
+    doneCountEl.textContent = String(doneCount);
+    if (doneCount === FRUITS.length) {
+      winBanner.classList.add('show');
+      burstConfetti();
+    }
+  }
+
+  function handleDrop(color, clientX, clientY) {
+    const el = document.elementFromPoint(clientX, clientY);
+    const slot = el && el.closest ? el.closest('.fruit-slot') : null;
+    if (!slot) return;
+
+    const fruit = FRUITS.find(f => 'slot-' + f.id === slot.id);
+    if (!fruit) return;
+
+    if (state[fruit.id]) return; // already painted, ignore
+
+    if (slot.dataset.color === color) {
+      slot.querySelector('svg').outerHTML = fruit.svg(fruit.hex);
+      slot.classList.add('done');
+      state[fruit.id] = true;
+      updateProgress();
+    } else {
+      const tryAgain = slot.querySelector('.try-again');
+      slot.classList.add('shake');
+      tryAgain.classList.add('show');
+      setTimeout(() => {
+        slot.classList.remove('shake');
+        tryAgain.classList.remove('show');
+      }, 700);
+    }
+  }
+
+  function burstConfetti() {
+    const layer = document.createElement('div');
+    layer.className = 'confetti-layer';
+    document.body.appendChild(layer);
+
+    const colors = ['#e53935', '#43a047', '#1e88e5', '#fdd835', '#ff6a3d', '#7c5cff'];
+    const originX = window.innerWidth / 2;
+    const pieceCount = 50;
+
+    for (let i = 0; i < pieceCount; i++) {
+      const piece = document.createElement('div');
+      piece.className = 'confetti-piece';
+      const color = colors[Math.floor(Math.random() * colors.length)];
+      const isCircle = Math.random() > 0.5;
+      piece.style.background = color;
+      piece.style.borderRadius = isCircle ? '50%' : '2px';
+      piece.style.left = (originX + (Math.random() * 300 - 150)) + 'px';
+
+      const tx = (Math.random() * 320 - 160) + 'px';
+      const ty = (window.innerHeight * (0.5 + Math.random() * 0.5)) + 'px';
+      const rot = (Math.random() * 720 - 360) + 'deg';
+      piece.style.setProperty('--tx', tx);
+      piece.style.setProperty('--ty', ty);
+      piece.style.setProperty('--rot', rot);
+
+      const dur = 1.2 + Math.random() * 1.0;
+      piece.style.animationDuration = dur.toFixed(2) + 's';
+      piece.style.animationDelay = (Math.random() * 0.2) + 's';
+
+      layer.appendChild(piece);
+    }
+
+    setTimeout(() => layer.remove(), 2600);
+  }
+
+  // ---------- Pointer-based drag (mouse + touch) ----------
+  let dragging = null; // { color, ghostEl, sourceEl }
+
+  function startDrag(brushEl, clientX, clientY) {
+    const color = brushEl.dataset.color;
+    const hex = FRUITS.find(f => f.color === color).hex;
+    brushEl.classList.add('dragging');
+
+    const ghost = document.createElement('div');
+    ghost.className = 'ghost-brush';
+    ghost.innerHTML = paintbrushSVG(hex);
+    ghost.style.left = clientX + 'px';
+    ghost.style.top = clientY + 'px';
+    document.body.appendChild(ghost);
+
+    dragging = { color, ghostEl: ghost, sourceEl: brushEl };
+  }
+
+  function moveDrag(clientX, clientY) {
+    if (!dragging) return;
+    dragging.ghostEl.style.left = clientX + 'px';
+    dragging.ghostEl.style.top = clientY + 'px';
+
+    document.querySelectorAll('.fruit-slot').forEach(slot => slot.classList.remove('drag-over'));
+    dragging.ghostEl.style.display = 'none';
+    const el = document.elementFromPoint(clientX, clientY);
+    dragging.ghostEl.style.display = '';
+    const slot = el && el.closest ? el.closest('.fruit-slot') : null;
+    if (slot) slot.classList.add('drag-over');
+  }
+
+  function endDrag(clientX, clientY) {
+    if (!dragging) return;
+    document.querySelectorAll('.fruit-slot').forEach(slot => slot.classList.remove('drag-over'));
+    dragging.ghostEl.style.display = 'none';
+    handleDrop(dragging.color, clientX, clientY);
+    dragging.ghostEl.remove();
+    dragging.sourceEl.classList.remove('dragging');
+    dragging = null;
+  }
+
+  palette.addEventListener('pointerdown', (e) => {
+    const brush = e.target.closest('.brush');
+    if (!brush) return;
+    e.preventDefault();
+    startDrag(brush, e.clientX, e.clientY);
+  });
+
+  window.addEventListener('pointermove', (e) => {
+    if (dragging) moveDrag(e.clientX, e.clientY);
+  });
+
+  window.addEventListener('pointerup', (e) => {
+    if (dragging) endDrag(e.clientX, e.clientY);
+  });
+
+  resetBtn.addEventListener('click', resetGame);
+</script>
+</body>
+</html>

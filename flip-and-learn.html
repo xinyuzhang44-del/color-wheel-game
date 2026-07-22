@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Flip &amp; Learn — Color Cards!</title>
+<style>
+  :root{
+    --red:#e53935;
+    --green:#43a047;
+    --blue:#1e88e5;
+    --yellow:#fdd835;
+    --ink:#2b2540;
+    --paper:#fffdf7;
+    --cloud:#f2eefb;
+    --shadow: 0 10px 24px rgba(43,37,64,0.18);
+  }
+
+  *{ box-sizing: border-box; }
+
+  html,body{
+    margin:0;
+    padding:0;
+    min-height:100%;
+    background: radial-gradient(circle at 20% 10%, #fff7e0 0%, #eaf3ff 45%, #f4ecff 100%);
+    font-family: "Nunito", "Segoe UI Rounded", "Segoe UI", "Trebuchet MS", Verdana, sans-serif;
+    color: var(--ink);
+    overflow-x: hidden;
+  }
+
+  .page{
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding: clamp(14px, 3vw, 32px);
+    gap: clamp(10px, 2vw, 18px);
+  }
+
+  .topbar{
+    width:100%;
+    max-width: 720px;
+    display:flex;
+    justify-content: space-between;
+    align-items:center;
+  }
+
+  .back-link{
+    text-decoration:none;
+    font-weight:800;
+    font-size: clamp(0.85rem, 2vw, 1rem);
+    color:#6b6690;
+    background: var(--paper);
+    border: 2px solid #d8d2f5;
+    border-radius: 999px;
+    padding: 8px 16px;
+    box-shadow: var(--shadow);
+    transition: transform 0.08s ease;
+  }
+  .back-link:active{ transform: translateY(2px); }
+
+  .streak{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    background: var(--paper);
+    border: 3px solid #ffdd6b;
+    border-radius: 999px;
+    padding: 8px 18px;
+    font-weight: 800;
+    font-size: clamp(0.95rem, 2.4vw, 1.2rem);
+    box-shadow: var(--shadow);
+  }
+  .streak .star-icon{
+    font-size: 1.3em;
+    filter: drop-shadow(0 2px 2px rgba(0,0,0,0.15));
+  }
+
+  header{
+    text-align:center;
+    max-width: 720px;
+  }
+
+  h1{
+    margin: 0 0 6px 0;
+    font-size: clamp(1.6rem, 4.5vw, 2.6rem);
+    font-weight: 900;
+    letter-spacing: -0.02em;
+    background: linear-gradient(90deg, var(--red), var(--yellow) 35%, var(--green) 65%, var(--blue));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .instructions{
+    margin:0;
+    font-size: clamp(0.95rem, 2.2vw, 1.15rem);
+    color: #55507a;
+    font-weight: 600;
+  }
+
+  main{
+    width:100%;
+    max-width: 720px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap: clamp(14px, 3vw, 22px);
+  }
+
+  .progress{
+    font-weight: 800;
+    font-size: clamp(0.9rem, 2.2vw, 1.05rem);
+    color: #6b6690;
+  }
+
+  /* ---------- Card deck with arrows ---------- */
+
+  .deck-row{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap: clamp(10px, 3vw, 26px);
+    width:100%;
+  }
+
+  .nav-arrow{
+    appearance:none;
+    border:none;
+    cursor:pointer;
+    flex: 0 0 auto;
+    width: clamp(48px, 10vw, 64px);
+    height: clamp(48px, 10vw, 64px);
+    border-radius: 50%;
+    font-size: clamp(1.3rem, 3.4vw, 1.7rem);
+    font-weight: 900;
+    color:#fff;
+    background: linear-gradient(160deg, #7c5cff, #5b3df0);
+    box-shadow: 0 6px 0 #4327b8, var(--shadow);
+    transition: transform 0.08s ease, box-shadow 0.08s ease, filter 0.15s ease;
+  }
+  .nav-arrow:hover{ filter: brightness(1.08); }
+  .nav-arrow:active{
+    transform: translateY(4px);
+    box-shadow: 0 2px 0 #4327b8, var(--shadow);
+  }
+
+  .card-scene{
+    perspective: 1400px;
+    width: clamp(220px, 56vw, 320px);
+    height: clamp(220px, 56vw, 320px);
+    flex: 0 0 auto;
+  }
+
+  .card{
+    position:relative;
+    width:100%;
+    height:100%;
+    cursor: pointer;
+    transform-style: preserve-3d;
+    transition: transform 0.55s cubic-bezier(0.34,1.2,0.4,1);
+  }
+  .card.flipped{ transform: rotateY(180deg); }
+  .card.swap{ animation: card-swap 0.28s ease; }
+  @keyframes card-swap{
+    0%{ opacity:1; }
+    45%{ opacity:0.15; }
+    100%{ opacity:1; }
+  }
+
+  .card-face{
+    position:absolute;
+    inset:0;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap: 10px;
+    border-radius: 28px;
+    backface-visibility: hidden;
+    background: var(--paper);
+    box-shadow: var(--shadow);
+    padding: clamp(14px, 3vw, 22px);
+  }
+
+  .card-front .icon-frame{
+    width: 72%;
+    height: 72%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background: var(--cloud);
+    border-radius: 22px;
+    border: 4px solid #fff;
+  }
+  .card-front .icon-frame svg{ width:80%; height:80%; }
+
+  .card-front .hint{
+    margin:0;
+    font-weight: 800;
+    font-size: clamp(0.85rem, 2.2vw, 1rem);
+    color: #9a94bd;
+  }
+
+  .card-back{
+    transform: rotateY(180deg);
+    justify-content:center;
+  }
+  .card-back .color-name{
+    margin:0;
+    font-weight: 900;
+    font-size: clamp(2rem, 7vw, 2.9rem);
+    text-transform: capitalize;
+  }
+  .card-back .color-name.c-red{ color: var(--red); }
+  .card-back .color-name.c-green{ color: var(--green); }
+  .card-back .color-name.c-blue{ color: var(--blue); }
+  .card-back .color-name.c-yellow{ color: #d0a900; }
+  .card-back .great-job{
+    margin:0;
+    font-weight: 800;
+    font-size: clamp(0.95rem, 2.6vw, 1.15rem);
+    color: #ff6a3d;
+  }
+  .card-back .swatch{
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    box-shadow: inset 0 0 0 4px rgba(255,255,255,0.6), var(--shadow);
+  }
+
+  .flip-hint{
+    margin:0;
+    font-weight: 700;
+    font-size: clamp(0.85rem, 2vw, 1rem);
+    color: #9a94bd;
+    text-align:center;
+  }
+
+  .toolbar{
+    display:flex;
+    gap: 14px;
+    flex-wrap:wrap;
+    justify-content:center;
+  }
+
+  .shuffle-btn{
+    appearance:none;
+    border:none;
+    cursor:pointer;
+    min-height: 54px;
+    padding: 10px 26px;
+    border-radius: 999px;
+    font-family: inherit;
+    font-weight: 800;
+    font-size: clamp(0.95rem, 2.4vw, 1.1rem);
+    color:#fff;
+    background: linear-gradient(160deg, #ff9a3d, #ff6a3d);
+    box-shadow: 0 6px 0 #c9491a, var(--shadow);
+    transition: transform 0.08s ease, box-shadow 0.08s ease;
+  }
+  .shuffle-btn:active{
+    transform: translateY(4px);
+    box-shadow: 0 2px 0 #c9491a, var(--shadow);
+  }
+
+  footer{
+    margin-top: auto;
+    padding-top: 10px;
+    font-size: 0.8rem;
+    color: #9a94bd;
+    text-align:center;
+  }
+
+  .confetti-layer{
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+    z-index: 999;
+  }
+  .confetti-piece{
+    position:absolute;
+    top: -20px;
+    width: 10px;
+    height: 14px;
+    opacity: 0.95;
+    animation-name: confetti-fall;
+    animation-timing-function: cubic-bezier(0.4,0.1,0.6,0.9);
+    animation-fill-mode: forwards;
+  }
+  @keyframes confetti-fall{
+    0%{ transform: translate(0,0) rotate(0deg); opacity: 1; }
+    100%{ transform: translate(var(--tx), var(--ty)) rotate(var(--rot)); opacity: 0; }
+  }
+
+  @media (max-width: 460px){
+    .deck-row{ gap: 8px; }
+  }
+
+  @media (prefers-color-scheme: dark){
+    html,body{
+      background: radial-gradient(circle at 20% 10%, #241f38 0%, #1b1730 55%, #171326 100%);
+      color: #f2eefb;
+    }
+    .instructions{ color: #c9c3ea; }
+    .streak{ background:#241f38; color:#f2eefb; border-color:#7a5cff; }
+    .back-link{ background:#241f38; color:#f2eefb; border-color:#443a6e; }
+    .progress, .flip-hint{ color:#b6aee0; }
+    .card-face{ background:#241f38; color:#f2eefb; }
+    .card-front .icon-frame{ background:#332c52; border-color:#241f38; }
+    .card-front .hint{ color:#8079a8; }
+    footer{ color:#7a7399; }
+  }
+
+  :root[data-theme="dark"] html,
+  :root[data-theme="dark"] body{
+    background: radial-gradient(circle at 20% 10%, #241f38 0%, #1b1730 55%, #171326 100%);
+    color: #f2eefb;
+  }
+  :root[data-theme="dark"] .instructions{ color: #c9c3ea; }
+  :root[data-theme="dark"] .streak{ background:#241f38; color:#f2eefb; border-color:#7a5cff; }
+  :root[data-theme="dark"] .back-link{ background:#241f38; color:#f2eefb; border-color:#443a6e; }
+  :root[data-theme="dark"] .progress, :root[data-theme="dark"] .flip-hint{ color:#b6aee0; }
+  :root[data-theme="dark"] .card-face{ background:#241f38; color:#f2eefb; }
+  :root[data-theme="dark"] .card-front .icon-frame{ background:#332c52; border-color:#241f38; }
+  :root[data-theme="dark"] .card-front .hint{ color:#8079a8; }
+  :root[data-theme="dark"] footer{ color:#7a7399; }
+
+  :root[data-theme="light"] html,
+  :root[data-theme="light"] body{
+    background: radial-gradient(circle at 20% 10%, #fff7e0 0%, #eaf3ff 45%, #f4ecff 100%);
+    color: var(--ink);
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="topbar">
+    <a class="back-link" href="index.html">&larr; Games</a>
+    <div class="streak"><span class="star-icon">⭐</span><span id="flipCount">0</span></div>
+  </div>
+
+  <header>
+    <h1>Flip &amp; Learn — Color Cards!</h1>
+    <p class="instructions">Look at the picture and say its color out loud, then flip the card to check!</p>
+  </header>
+
+  <main>
+    <p class="progress" id="progress">Card 1 of 12</p>
+
+    <div class="deck-row">
+      <button class="nav-arrow" id="prevBtn" aria-label="Previous card">&#8592;</button>
+
+      <div class="card-scene">
+        <div class="card" id="card">
+          <div class="card-face card-front">
+            <div class="icon-frame" id="iconFrame"></div>
+            <p class="hint">Say the color!</p>
+          </div>
+          <div class="card-face card-back">
+            <div class="swatch" id="swatch"></div>
+            <p class="color-name" id="colorName"></p>
+            <p class="great-job" id="greatJob"></p>
+          </div>
+        </div>
+      </div>
+
+      <button class="nav-arrow" id="nextBtn" aria-label="Next card">&#8594;</button>
+    </div>
+
+    <p class="flip-hint">Tap the card to flip it over</p>
+
+    <div class="toolbar">
+      <button class="shuffle-btn" id="shuffleBtn">&#128256; Shuffle Cards</button>
+    </div>
+  </main>
+
+  <footer>Made for little learners &middot; practice makes perfect &middot; no wrong answers here!</footer>
+</div>
+
+<script>
+  // ============================================================
+  // ICON_SET — same illustrations used in the Spin the Wheel game.
+  // Structure: ICONS[colorName] = array of full inline <svg>...</svg> strings.
+  // ============================================================
+  const ICONS = {
+    red: [
+      // Apple
+      `<svg viewBox="0 0 150 150" xmlns="http://www.w3.org/2000/svg">
+        <path d="M75,48 C55,20 15,32 15,76 C15,113 46,136 75,133 C104,136 135,113 135,76 C135,32 95,20 75,48 Z" fill="#e53935"/>
+        <path d="M75,48 C68,38 62,32 55,30" fill="none" stroke="#8d3c1f" stroke-width="6" stroke-linecap="round"/>
+        <path d="M75,44 C78,26 84,16 92,10" fill="none" stroke="#6d4c25" stroke-width="7" stroke-linecap="round"/>
+        <ellipse cx="97" cy="22" rx="16" ry="9" fill="#43a047" transform="rotate(-25 97 22)"/>
+        <ellipse cx="52" cy="65" rx="10" ry="20" fill="#ffffff" opacity="0.25" transform="rotate(-15 52 65)"/>
+      </svg>`,
+      // Strawberry
+      `<svg viewBox="0 0 150 150" xmlns="http://www.w3.org/2000/svg">
+        <path d="M75,46 C104,46 128,72 122,100 C116,128 98,140 75,140 C52,140 34,128 28,100 C22,72 46,46 75,46 Z" fill="#e53935"/>
+        <path d="M75,50 L58,28 L70,40 L75,24 L80,40 L92,28 L75,50 Z" fill="#43a047"/>
+        <ellipse cx="75" cy="48" rx="8" ry="6" fill="#2e7d32"/>
+        <g fill="#fdd835" opacity="0.9">
+          <ellipse cx="58" cy="72" rx="4" ry="6" transform="rotate(-20 58 72)"/>
+          <ellipse cx="92" cy="72" rx="4" ry="6" transform="rotate(20 92 72)"/>
+          <ellipse cx="75" cy="65" rx="4" ry="6"/>
+          <ellipse cx="45" cy="95" rx="4" ry="6" transform="rotate(-25 45 95)"/>
+          <ellipse cx="105" cy="95" rx="4" ry="6" transform="rotate(25 105 95)"/>
+          <ellipse cx="60" cy="105" rx="4" ry="6" transform="rotate(-15 60 105)"/>
+          <ellipse cx="90" cy="105" rx="4" ry="6" transform="rotate(15 90 105)"/>
+          <ellipse cx="75" cy="118" rx="4" ry="6"/>
+          <ellipse cx="55" cy="120" rx="4" ry="6" transform="rotate(-10 55 120)"/>
+          <ellipse cx="95" cy="120" rx="4" ry="6" transform="rotate(10 95 120)"/>
+        </g>
+        <ellipse cx="55" cy="80" rx="9" ry="16" fill="#ffffff" opacity="0.2" transform="rotate(-15 55 80)"/>
+      </svg>`,
+      // Fire truck
+      `<svg viewBox="0 0 150 150" xmlns="http://www.w3.org/2000/svg">
+        <rect x="10" y="58" width="115" height="45" rx="10" fill="#e53935"/>
+        <path d="M95,40 L133,40 C138,40 141,44 141,49 L141,58 L95,58 Z" fill="#c62828"/>
+        <rect x="103" y="46" width="30" height="14" rx="3" fill="#bbdefb"/>
+        <rect x="20" y="45" width="45" height="10" rx="3" fill="#eeeeee"/>
+        <rect x="30" y="30" width="55" height="8" rx="4" fill="#9e9e9e"/>
+        <rect x="30" y="30" width="55" height="8" rx="4" fill="none" stroke="#616161" stroke-width="1.5"/>
+        <circle cx="45" cy="108" r="17" fill="#212121"/>
+        <circle cx="45" cy="108" r="7" fill="#bdbdbd"/>
+        <circle cx="108" cy="108" r="17" fill="#212121"/>
+        <circle cx="108" cy="108" r="7" fill="#bdbdbd"/>
+        <circle cx="133" cy="50" r="5" fill="#fdd835"/>
+        <rect x="10" y="70" width="115" height="8" fill="#ffffff" opacity="0.85"/>
+      </svg>`
+    ],
+    green: [
+      // Leaf
+      `<svg viewBox="0 0 150 150" xmlns="http://www.w3.org/2000/svg">
+        <path d="M75,18 C112,42 122,95 75,136 C28,95 38,42 75,18 Z" fill="#43a047"/>
+        <path d="M75,30 L75,124" fill="none" stroke="#2e7d32" stroke-width="5" stroke-linecap="round"/>
+        <path d="M75,55 L55,45 M75,75 L50,68 M75,95 L52,92 M75,55 L95,45 M75,75 L100,68 M75,95 L98,92" fill="none" stroke="#2e7d32" stroke-width="3.5" stroke-linecap="round"/>
+        <path d="M75,124 L75,140" fill="none" stroke="#6d4c25" stroke-width="6" stroke-linecap="round"/>
+      </svg>`,
+      // Frog
+      `<svg viewBox="0 0 150 150" xmlns="http://www.w3.org/2000/svg">
+        <ellipse cx="75" cy="100" rx="48" ry="34" fill="#43a047"/>
+        <ellipse cx="40" cy="115" rx="14" ry="9" fill="#388e3c"/>
+        <ellipse cx="110" cy="115" rx="14" ry="9" fill="#388e3c"/>
+        <circle cx="50" cy="58" r="21" fill="#43a047"/>
+        <circle cx="100" cy="58" r="21" fill="#43a047"/>
+        <circle cx="50" cy="55" r="12" fill="#ffffff"/>
+        <circle cx="100" cy="55" r="12" fill="#ffffff"/>
+        <circle cx="52" cy="57" r="6" fill="#212121"/>
+        <circle cx="98" cy="57" r="6" fill="#212121"/>
+        <path d="M55,108 Q75,122 95,108" fill="none" stroke="#2e7d32" stroke-width="4" stroke-linecap="round"/>
+        <ellipse cx="55" cy="92" rx="6" ry="4" fill="#2e7d32" opacity="0.6"/>
+        <ellipse cx="95" cy="92" rx="6" ry="4" fill="#2e7d32" opacity="0.6"/>
+        <ellipse cx="75" cy="118" rx="6" ry="4" fill="#2e7d32" opacity="0.6"/>
+      </svg>`,
+      // Tree
+      `<svg viewBox="0 0 150 150" xmlns="http://www.w3.org/2000/svg">
+        <rect x="64" y="98" width="22" height="38" rx="5" fill="#6d4c25"/>
+        <circle cx="45" cy="75" r="32" fill="#43a047"/>
+        <circle cx="105" cy="75" r="32" fill="#43a047"/>
+        <circle cx="75" cy="52" r="38" fill="#43a047"/>
+        <circle cx="75" cy="80" r="34" fill="#4caf50"/>
+        <circle cx="55" cy="60" r="9" fill="#2e7d32" opacity="0.5"/>
+        <circle cx="95" cy="65" r="8" fill="#2e7d32" opacity="0.5"/>
+        <circle cx="75" cy="90" r="7" fill="#2e7d32" opacity="0.5"/>
+      </svg>`
+    ],
+    blue: [
+      // Sky with cloud
+      `<svg viewBox="0 0 150 150" xmlns="http://www.w3.org/2000/svg">
+        <rect x="8" y="8" width="134" height="134" rx="22" fill="#1e88e5"/>
+        <circle cx="50" cy="82" r="24" fill="#ffffff"/>
+        <circle cx="78" cy="70" r="28" fill="#ffffff"/>
+        <circle cx="104" cy="84" r="22" fill="#ffffff"/>
+        <ellipse cx="78" cy="98" rx="48" ry="22" fill="#ffffff"/>
+      </svg>`,
+      // Blueberries
+      `<svg viewBox="0 0 150 150" xmlns="http://www.w3.org/2000/svg">
+        <path d="M75,42 L68,26 M75,42 L82,26" fill="none" stroke="#2e7d32" stroke-width="4" stroke-linecap="round"/>
+        <ellipse cx="72" cy="30" rx="10" ry="6" fill="#43a047" transform="rotate(-10 72 30)"/>
+        <circle cx="75" cy="55" r="21" fill="#1e88e5"/>
+        <circle cx="45" cy="75" r="21" fill="#1e88e5"/>
+        <circle cx="105" cy="75" r="21" fill="#1e88e5"/>
+        <circle cx="55" cy="112" r="19" fill="#1e88e5"/>
+        <circle cx="95" cy="112" r="19" fill="#1e88e5"/>
+        <g stroke="#0d47a1" stroke-width="2.5" stroke-linecap="round">
+          <path d="M71,51 L79,51 M75,47 L75,55"/>
+          <path d="M41,71 L49,71 M45,67 L45,75"/>
+          <path d="M101,71 L109,71 M105,67 L105,75"/>
+          <path d="M51,108 L59,108 M55,104 L55,112"/>
+          <path d="M91,108 L99,108 M95,104 L95,112"/>
+        </g>
+        <ellipse cx="68" cy="48" rx="4" ry="6" fill="#64b5f6" opacity="0.6"/>
+      </svg>`,
+      // Whale
+      `<svg viewBox="0 0 150 150" xmlns="http://www.w3.org/2000/svg">
+        <path d="M18,85 C18,55 48,38 78,40 C108,42 128,58 130,75 C131,80 128,83 122,82 C124,90 118,96 108,93 L112,105 L96,96 C80,112 40,110 25,95 C18,88 18,90 18,85 Z" fill="#1e88e5"/>
+        <path d="M28,88 C40,98 70,100 90,90" fill="none" stroke="#64b5f6" stroke-width="7" stroke-linecap="round" opacity="0.7"/>
+        <circle cx="45" cy="65" r="5" fill="#212121"/>
+        <circle cx="55" cy="42" r="4" fill="#1565c0"/>
+        <path d="M55,38 C52,26 52,20 55,12 M55,38 C58,28 62,24 66,18" fill="none" stroke="#90caf9" stroke-width="5" stroke-linecap="round"/>
+      </svg>`
+    ],
+    yellow: [
+      // Sun
+      `<svg viewBox="0 0 150 150" xmlns="http://www.w3.org/2000/svg">
+        <g fill="#fdd835" stroke="#f9a825" stroke-width="3" stroke-linejoin="round">
+          <polygon points="75,8 82,32 68,32"/>
+          <polygon points="75,142 82,118 68,118"/>
+          <polygon points="8,75 32,68 32,82"/>
+          <polygon points="142,75 118,82 118,68"/>
+          <polygon points="27,27 47,38 38,47"/>
+          <polygon points="123,27 112,47 103,38"/>
+          <polygon points="27,123 38,103 47,112"/>
+          <polygon points="123,123 103,112 112,103"/>
+        </g>
+        <circle cx="75" cy="75" r="38" fill="#fdd835" stroke="#f9a825" stroke-width="3"/>
+        <circle cx="63" cy="70" r="4.5" fill="#8d6e00"/>
+        <circle cx="87" cy="70" r="4.5" fill="#8d6e00"/>
+        <path d="M60,85 Q75,96 90,85" fill="none" stroke="#8d6e00" stroke-width="4" stroke-linecap="round"/>
+      </svg>`,
+      // Banana
+      `<svg viewBox="0 0 150 150" xmlns="http://www.w3.org/2000/svg">
+        <path d="M42,118 C24,90 28,52 58,28 C74,15 92,14 100,22 C88,24 74,32 63,46 C48,66 46,90 56,112 C60,120 68,126 78,127 C68,133 50,132 42,118 Z" fill="#fdd835" stroke="#6d4c25" stroke-width="3.5" stroke-linejoin="round"/>
+        <ellipse cx="96" cy="22" rx="8" ry="6" fill="#6d4c25" transform="rotate(30 96 22)"/>
+        <ellipse cx="45" cy="120" rx="9" ry="7" fill="#8d6e00" transform="rotate(-30 45 120)"/>
+        <path d="M62,42 C50,60 48,84 57,105" fill="none" stroke="#f9a825" stroke-width="3" stroke-linecap="round" opacity="0.6"/>
+      </svg>`,
+      // Lemon
+      `<svg viewBox="0 0 150 150" xmlns="http://www.w3.org/2000/svg">
+        <ellipse cx="75" cy="78" rx="47" ry="36" fill="#fdd835" stroke="#f9a825" stroke-width="3.5"/>
+        <ellipse cx="25" cy="78" rx="9" ry="7" fill="#f9a825"/>
+        <ellipse cx="125" cy="78" rx="9" ry="7" fill="#f9a825"/>
+        <path d="M118,50 C126,40 132,36 138,35" fill="none" stroke="#43a047" stroke-width="4" stroke-linecap="round"/>
+        <ellipse cx="134" cy="34" rx="10" ry="6" fill="#43a047" transform="rotate(20 134 34)"/>
+        <ellipse cx="60" cy="60" rx="12" ry="20" fill="#ffffff" opacity="0.25" transform="rotate(-15 60 60)"/>
+        <path d="M50,95 Q75,108 100,95" fill="none" stroke="#f9a825" stroke-width="2.5" stroke-linecap="round" opacity="0.6"/>
+      </svg>`
+    ]
+  };
+
+  const HEX = { red: '#e53935', green: '#43a047', blue: '#1e88e5', yellow: '#fdd835' };
+  const ENCOURAGEMENTS = ['Great job!', 'Awesome!', 'You got it!', 'Super star!', 'Nice work!', 'Way to go!'];
+
+  function buildDeck() {
+    const deck = [];
+    for (const color of Object.keys(ICONS)) {
+      ICONS[color].forEach(svg => deck.push({ color, svg }));
+    }
+    // Fisher-Yates shuffle
+    for (let i = deck.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [deck[i], deck[j]] = [deck[j], deck[i]];
+    }
+    return deck;
+  }
+
+  let deck = buildDeck();
+  let index = 0;
+  let flipCount = 0;
+
+  const cardEl = document.getElementById('card');
+  const iconFrame = document.getElementById('iconFrame');
+  const colorNameEl = document.getElementById('colorName');
+  const swatchEl = document.getElementById('swatch');
+  const greatJobEl = document.getElementById('greatJob');
+  const progressEl = document.getElementById('progress');
+  const flipCountEl = document.getElementById('flipCount');
+  const prevBtn = document.getElementById('prevBtn');
+  const nextBtn = document.getElementById('nextBtn');
+  const shuffleBtn = document.getElementById('shuffleBtn');
+
+  function renderCard() {
+    const item = deck[index];
+    iconFrame.innerHTML = item.svg;
+    colorNameEl.textContent = item.color;
+    colorNameEl.className = 'color-name c-' + item.color;
+    swatchEl.style.background = HEX[item.color];
+    greatJobEl.textContent = ENCOURAGEMENTS[Math.floor(Math.random() * ENCOURAGEMENTS.length)];
+    progressEl.textContent = `Card ${index + 1} of ${deck.length}`;
+    cardEl.classList.remove('flipped');
+  }
+
+  function goTo(newIndex, direction) {
+    index = ((newIndex % deck.length) + deck.length) % deck.length;
+    cardEl.classList.add('swap');
+    setTimeout(() => cardEl.classList.remove('swap'), 300);
+    renderCard();
+  }
+
+  function flipCard() {
+    const willFlip = !cardEl.classList.contains('flipped');
+    cardEl.classList.toggle('flipped');
+    if (willFlip) {
+      flipCount += 1;
+      flipCountEl.textContent = String(flipCount);
+      burstConfetti();
+    }
+  }
+
+  function burstConfetti() {
+    const layer = document.createElement('div');
+    layer.className = 'confetti-layer';
+    document.body.appendChild(layer);
+
+    const colors = ['#e53935', '#43a047', '#1e88e5', '#fdd835', '#ff6a3d', '#7c5cff'];
+    const originX = window.innerWidth / 2;
+    const pieceCount = 30;
+
+    for (let i = 0; i < pieceCount; i++) {
+      const piece = document.createElement('div');
+      piece.className = 'confetti-piece';
+      const color = colors[Math.floor(Math.random() * colors.length)];
+      const isCircle = Math.random() > 0.5;
+      piece.style.background = color;
+      piece.style.borderRadius = isCircle ? '50%' : '2px';
+      piece.style.left = (originX + (Math.random() * 260 - 130)) + 'px';
+
+      const tx = (Math.random() * 300 - 150) + 'px';
+      const ty = (window.innerHeight * (0.5 + Math.random() * 0.5)) + 'px';
+      const rot = (Math.random() * 720 - 360) + 'deg';
+      piece.style.setProperty('--tx', tx);
+      piece.style.setProperty('--ty', ty);
+      piece.style.setProperty('--rot', rot);
+
+      const dur = 1.1 + Math.random() * 0.9;
+      piece.style.animationDuration = dur.toFixed(2) + 's';
+      piece.style.animationDelay = (Math.random() * 0.15) + 's';
+
+      layer.appendChild(piece);
+    }
+
+    setTimeout(() => layer.remove(), 2200);
+  }
+
+  cardEl.addEventListener('click', flipCard);
+  prevBtn.addEventListener('click', () => goTo(index - 1, -1));
+  nextBtn.addEventListener('click', () => goTo(index + 1, 1));
+  shuffleBtn.addEventListener('click', () => {
+    deck = buildDeck();
+    index = 0;
+    renderCard();
+  });
+
+  renderCard();
+</script>
+</body>
+</html>

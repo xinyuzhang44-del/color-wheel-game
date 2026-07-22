@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Color Games — Learn Your Colors!</title>
+<style>
+  :root{
+    --red:#e53935;
+    --green:#43a047;
+    --blue:#1e88e5;
+    --yellow:#fdd835;
+    --ink:#2b2540;
+    --paper:#fffdf7;
+    --shadow: 0 10px 24px rgba(43,37,64,0.18);
+  }
+
+  *{ box-sizing: border-box; }
+
+  html,body{
+    margin:0;
+    padding:0;
+    min-height:100%;
+    background: radial-gradient(circle at 20% 10%, #fff7e0 0%, #eaf3ff 45%, #f4ecff 100%);
+    font-family: "Nunito", "Segoe UI Rounded", "Segoe UI", "Trebuchet MS", Verdana, sans-serif;
+    color: var(--ink);
+  }
+
+  .page{
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding: clamp(20px, 4vw, 48px);
+    gap: clamp(20px, 4vw, 36px);
+  }
+
+  header{
+    text-align:center;
+    max-width: 720px;
+  }
+
+  h1{
+    margin: 0 0 8px 0;
+    font-size: clamp(1.8rem, 5vw, 2.8rem);
+    font-weight: 900;
+    letter-spacing: -0.02em;
+    background: linear-gradient(90deg, var(--red), var(--yellow) 35%, var(--green) 65%, var(--blue));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .instructions{
+    margin:0;
+    font-size: clamp(1rem, 2.4vw, 1.2rem);
+    color: #55507a;
+    font-weight: 600;
+  }
+
+  .cards{
+    display:flex;
+    flex-wrap:wrap;
+    gap: clamp(16px, 3vw, 30px);
+    justify-content:center;
+    max-width: 900px;
+  }
+
+  .game-card{
+    text-decoration:none;
+    color: var(--ink);
+    width: min(360px, 90vw);
+    background: var(--paper);
+    border-radius: 28px;
+    box-shadow: var(--shadow);
+    padding: clamp(20px, 4vw, 30px);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap: 14px;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    border: 4px solid transparent;
+  }
+  .game-card:hover{
+    transform: translateY(-6px);
+    box-shadow: 0 16px 30px rgba(43,37,64,0.24);
+  }
+  .game-card:active{ transform: translateY(-2px); }
+
+  .game-emoji{
+    font-size: clamp(3rem, 8vw, 4rem);
+    filter: drop-shadow(0 4px 6px rgba(0,0,0,0.15));
+  }
+
+  .game-card h2{
+    margin:0;
+    font-size: clamp(1.2rem, 3vw, 1.5rem);
+    font-weight: 900;
+  }
+
+  .game-card p{
+    margin:0;
+    text-align:center;
+    font-size: clamp(0.9rem, 2.2vw, 1.02rem);
+    color: #6b6690;
+    font-weight: 600;
+  }
+
+  .play-pill{
+    margin-top: 4px;
+    font-weight: 800;
+    font-size: clamp(0.9rem, 2.2vw, 1.02rem);
+    color: #fff;
+    background: linear-gradient(160deg, #7c5cff, #5b3df0);
+    padding: 8px 22px;
+    border-radius: 999px;
+    box-shadow: 0 5px 0 #4327b8;
+  }
+
+  .card-0 .play-pill{ background: linear-gradient(160deg, #43a047, #2e7d32); box-shadow: 0 5px 0 #1b5e20; }
+  .card-1 .play-pill{ background: linear-gradient(160deg, #7c5cff, #5b3df0); box-shadow: 0 5px 0 #4327b8; }
+  .card-2 .play-pill{ background: linear-gradient(160deg, #ff9a3d, #ff6a3d); box-shadow: 0 5px 0 #c9491a; }
+
+  footer{
+    margin-top: auto;
+    padding-top: 10px;
+    font-size: 0.8rem;
+    color: #9a94bd;
+    text-align:center;
+  }
+
+  @media (prefers-color-scheme: dark){
+    html,body{
+      background: radial-gradient(circle at 20% 10%, #241f38 0%, #1b1730 55%, #171326 100%);
+      color: #f2eefb;
+    }
+    .instructions{ color: #c9c3ea; }
+    .game-card{ background:#241f38; color:#f2eefb; }
+    .game-card p{ color:#b6aee0; }
+    footer{ color:#7a7399; }
+  }
+
+  :root[data-theme="dark"] html,
+  :root[data-theme="dark"] body{
+    background: radial-gradient(circle at 20% 10%, #241f38 0%, #1b1730 55%, #171326 100%);
+    color: #f2eefb;
+  }
+  :root[data-theme="dark"] .instructions{ color: #c9c3ea; }
+  :root[data-theme="dark"] .game-card{ background:#241f38; color:#f2eefb; }
+  :root[data-theme="dark"] .game-card p{ color:#b6aee0; }
+  :root[data-theme="dark"] footer{ color:#7a7399; }
+
+  :root[data-theme="light"] html,
+  :root[data-theme="light"] body{
+    background: radial-gradient(circle at 20% 10%, #fff7e0 0%, #eaf3ff 45%, #f4ecff 100%);
+    color: var(--ink);
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <header>
+    <h1>Color Games — Learn Your Colors!</h1>
+    <p class="instructions">Pick a game and practice saying red, green, blue, and yellow out loud!</p>
+  </header>
+
+  <div class="cards">
+    <a class="game-card card-0" href="paint-and-match.html">
+      <div class="game-emoji">🖌️</div>
+      <h2>Paint the Fruit</h2>
+      <p>Drag the paintbrush to the fruit that matches its color!</p>
+      <span class="play-pill">Play &rarr;</span>
+    </a>
+
+    <a class="game-card card-1" href="spin-the-wheel.html">
+      <div class="game-emoji">🎡</div>
+      <h2>Spin the Wheel</h2>
+      <p>Spin the color wheel, see a picture pop up, and say its color out loud!</p>
+      <span class="play-pill">Play &rarr;</span>
+    </a>
+
+    <a class="game-card card-2" href="flip-and-learn.html">
+      <div class="game-emoji">🃏</div>
+      <h2>Flip &amp; Learn</h2>
+      <p>Flip through picture cards, say the color, then flip to check your answer!</p>
+      <span class="play-pill">Play &rarr;</span>
+    </a>
+  </div>
+
+  <footer>Made for little learners &middot; practice makes perfect &middot; no wrong answers here!</footer>
+</div>
+</body>
+</html>
